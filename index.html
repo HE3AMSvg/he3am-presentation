@@ -43,6 +43,18 @@ h1{font-size:clamp(38px,6vw,64px);line-height:1.25;margin:20px 0 10px;font-weigh
 footer{border-top:1px solid #ffffff12;padding:23px 0;color:#8293a8;font-size:12px}.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 @media(max-width:700px){.hero{padding-top:38px}.slide{min-height:570px;aspect-ratio:auto;padding:24px 18px}.cards{grid-template-columns:1fr}.info.wide{grid-column:auto}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.slide h2{font-size:29px}.navtag{font-size:10px}}
 @media(min-width:701px) and (max-width:900px){.slide{min-height:500px}.info p{font-size:13px}}
+
+/* Public upload area */
+.upload-area{margin:-28px 0 58px;padding:clamp(18px,3vw,30px);border:1px solid #ffffff20;border-radius:24px;background:linear-gradient(145deg,#172c40ee,#122033f5);box-shadow:0 18px 55px #0004}
+.upload-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.upload-head h2{font-size:clamp(22px,3vw,30px);margin:0}.upload-head p{color:var(--muted);margin:6px 0 0;font-size:13px;line-height:1.8}
+.upload-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:15px;border:1px dashed #38bdf866;border-radius:15px;background:#38bdf809}
+.upload-form input[type=file]{flex:1;min-width:220px;color:var(--muted);font:inherit;font-size:13px}
+.upload-status{font-size:13px;color:var(--muted);min-height:25px;margin:12px 2px}
+.file-list{display:grid;gap:10px;margin-top:12px}.file-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:1px solid #ffffff16;background:#ffffff08;border-radius:13px;flex-wrap:wrap}
+.file-meta{min-width:0}.file-meta strong{display:block;overflow-wrap:anywhere;font-size:14px}.file-meta small{display:block;color:#91a4b9;margin-top:4px;font-size:11px}
+.file-actions{display:flex;gap:8px;flex-wrap:wrap}.file-actions a{font-size:12px}
+
 </style>
 </head>
 <body>
@@ -63,8 +75,21 @@ footer{border-top:1px solid #ffffff12;padding:23px 0;color:#8293a8;font-size:12p
 </div>
 <div class="hint">راهنما: کلیدهای ← و → برای تغییر اسلاید · کلید F برای تمام‌صفحه</div>
 </section>
+
+<section class="upload-area" id="community-files">
+  <div class="upload-head"><div><h2>📂 اشتراک‌گذاری پاورپوینت</h2><p>همه می‌توانند فایل پاورپوینت با فرمت PPTX بارگذاری کنند یا فایل‌های دیگران را دریافت کنند. حداکثر حجم هر فایل: ۲۰ مگابایت.</p></div><span class="navtag">آپلود عمومی</span></div>
+  <form class="upload-form" id="uploadForm">
+    <input id="pptFile" type="file" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" required>
+    <button class="btn primary" id="uploadButton" type="submit">آپلود پاورپوینت ↑</button>
+  </form>
+  <div class="upload-status" id="uploadStatus" role="status">در حال اتصال به فضای فایل‌ها…</div>
+  <div class="file-list" id="fileList"></div>
+</section>
+
 <footer><div class="foot"><span>© 2026 HE3AM Studio</span><span>ارائه‌دهنده: HE3AM · پایه دهم ریاضی و فیزیک</span></div></footer>
 </div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const slides = [
 {head:'درس هفتم · تفکر و سواد رسانه‌ای',title:'ما هم <span>می‌توانیم!</span>',subtitle:'از تماشاگر رسانه تا سازندهٔ پیام',body:'<div class="question">پایه دهم ریاضی و فیزیک<br>ارائه‌دهنده: HE3AM</div>'},
@@ -88,6 +113,64 @@ document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(current+1);if
 function toggleFullscreen(){const target=document.getElementById('presentation');if(!document.fullscreenElement){target.requestFullscreen?.();}else{document.exitFullscreen?.();}}
 document.getElementById('fullscreen').addEventListener('click',toggleFullscreen);
 render();
+
+const BUCKET='presentations';
+const MAX_FILE_SIZE=20*1024*1024;
+const fileInput=document.getElementById('pptFile');
+const uploadForm=document.getElementById('uploadForm');
+const uploadStatus=document.getElementById('uploadStatus');
+const fileList=document.getElementById('fileList');
+const uploadButton=document.getElementById('uploadButton');
+let storageClient=null;
+function setUploadStatus(message,isError=false){uploadStatus.textContent=message;uploadStatus.style.color=isError?'#fca5a5':'var(--muted)';}
+function formatSize(bytes){return bytes<1024*1024?(bytes/1024).toFixed(0)+' KB':(bytes/1024/1024).toFixed(1)+' MB';}
+function safeName(name){return name.replace(/[\\/:*?"<>|#%{}~&]/g,'_').replace(/\s+/g,' ').trim().slice(0,100)||'presentation.pptx';}
+function getStorageClient(){
+  if(storageClient)return storageClient;
+  if(!window.supabase||!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY||window.SUPABASE_URL.includes('YOUR_')||window.SUPABASE_ANON_KEY.includes('YOUR_'))return null;
+  storageClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
+  return storageClient;
+}
+async function loadFiles(){
+  const client=getStorageClient();
+  if(!client){setUploadStatus('برای فعال‌شدن آپلود، تنظیمات Supabase را در فایل config.js وارد کنید.',true);return;}
+  const {data,error}=await client.storage.from(BUCKET).list('',{limit:100,sortBy:{column:'created_at',order:'desc'}});
+  if(error){setUploadStatus('خطا در دریافت فهرست فایل‌ها: '+error.message,true);return;}
+  const files=(data||[]).filter(f=>f.name.toLowerCase().endsWith('.pptx')&&!f.name.startsWith('.'));
+  fileList.innerHTML='';
+  if(!files.length){fileList.innerHTML='<div class="hint">هنوز پاورپوینتی بارگذاری نشده است. اولین فایل را شما اضافه کنید!</div>';setUploadStatus('فضای فایل‌ها آماده است.');return;}
+  files.forEach(file=>{
+    const {data:publicData}=client.storage.from(BUCKET).getPublicUrl(file.name);
+    const row=document.createElement('div');row.className='file-card';
+    const meta=document.createElement('div');meta.className='file-meta';
+    const title=document.createElement('strong');title.textContent=file.name.replace(/^\d+-[a-f0-9-]+-/,'');
+    const small=document.createElement('small');small.textContent=(file.created_at?new Date(file.created_at).toLocaleString('fa-IR')+' · ':'')+formatSize(file.metadata?.size||0);
+    meta.append(title,small);
+    const actions=document.createElement('div');actions.className='file-actions';
+    const view=document.createElement('a');view.className='btn';view.textContent='مشاهده / دانلود';view.href=publicData.publicUrl;view.target='_blank';view.rel='noopener noreferrer';
+    actions.append(view);row.append(meta,actions);fileList.append(row);
+  });
+  setUploadStatus(files.length+' پاورپوینت در دسترس است.');
+}
+uploadForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const client=getStorageClient();
+  if(!client){setUploadStatus('تنظیمات Supabase هنوز کامل نشده است.',true);return;}
+  const file=fileInput.files?.[0];
+  if(!file){setUploadStatus('ابتدا یک فایل انتخاب کنید.',true);return;}
+  if(!file.name.toLowerCase().endsWith('.pptx')){setUploadStatus('فقط فایل‌های PPTX مجاز هستند.',true);return;}
+  if(file.size>MAX_FILE_SIZE){setUploadStatus('حجم فایل باید کمتر از ۲۰ مگابایت باشد.',true);return;}
+  const mime='application/vnd.openxmlformats-officedocument.presentationml.presentation';
+  if(file.type&&file.type!==mime){setUploadStatus('نوع فایل انتخاب‌شده معتبر نیست.',true);return;}
+  uploadButton.disabled=true;setUploadStatus('در حال آپلود فایل…');
+  const key=Date.now()+'-'+crypto.randomUUID()+'-'+safeName(file.name);
+  const {error}=await client.storage.from(BUCKET).upload(key,file,{contentType:mime,upsert:false});
+  uploadButton.disabled=false;
+  if(error){setUploadStatus('آپلود انجام نشد: '+error.message,true);return;}
+  fileInput.value='';setUploadStatus('پاورپوینت با موفقیت بارگذاری شد!');await loadFiles();
+});
+loadFiles();
+
 </script>
 </body>
 </html>
