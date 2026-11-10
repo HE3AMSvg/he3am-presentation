@@ -23,12 +23,6 @@ h1{font-size:clamp(38px,7vw,68px);line-height:1.3;margin:24px 0 12px;font-weight
 .rule{height:1px;background:#ffffff16;margin:25px 0}.details{display:grid;grid-template-columns:1fr 1fr;gap:18px}.detail small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.detail strong{font-size:14px;font-weight:600}
 .actions{display:flex;gap:12px;margin-top:27px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:14px 21px;font-family:inherit;font-size:14px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:.2s}.btn:hover{transform:translateY(-2px)}.primary{background:linear-gradient(110deg,var(--blue),#67d9e9);color:#082033;box-shadow:0 10px 28px #38bdf82b}.secondary{background:#ffffff0b;border:1px solid #ffffff20;color:var(--text)}.btn.disabled{opacity:.45;cursor:not-allowed;transform:none}
 .side h3{margin:0 0 18px;font-size:17px}.steps{display:grid;gap:17px}.step{display:flex;gap:13px;align-items:flex-start}.num{flex:0 0 30px;height:30px;border-radius:10px;background:#38bdf81c;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:13px}.step p{margin:0;color:var(--muted);font-size:13px;line-height:1.9}.step b{color:var(--text);display:block;font-size:14px}
-.uploadbox{margin-top:22px;padding:20px;border:1px dashed #38bdf866;border-radius:18px;background:#38bdf808}
-.uploadbox h3{margin:0 0 7px;font-size:16px}.uploadbox .hint{margin:0 0 15px;color:var(--muted);font-size:12px;line-height:1.9}
-.filepick{display:block;width:100%;padding:13px;border-radius:12px;background:#101e30;border:1px solid #ffffff20;color:var(--muted);font:inherit;font-size:13px}
-.uploadrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.uploadstatus{font-size:12px;color:var(--muted);line-height:1.8;margin-top:10px}
-.progress{height:6px;background:#ffffff14;border-radius:9px;overflow:hidden;margin-top:10px;display:none}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--mint));transition:width .2s}
 .note{margin-top:22px;padding:15px 17px;background:#fbbf2410;border:1px solid #fbbf2430;border-radius:14px;color:#f5d58b;font-size:12px;line-height:1.9}
 footer{border-top:1px solid #ffffff12;padding:24px 0;color:#8293a8;font-size:12px}.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 @media(max-width:760px){main{padding:50px 0}.layout{grid-template-columns:1fr}.navtag{font-size:11px}.card{padding:22px}h1{letter-spacing:-1px}.lead{font-size:15px}}
@@ -55,16 +49,7 @@ footer{border-top:1px solid #ffffff12;padding:24px 0;color:#8293a8;font-size:12p
 <a class="btn primary disabled" id="download" href="#" aria-disabled="true">↓ دریافت پاورپوینت</a>
 <a class="btn secondary disabled" id="preview" href="#" aria-disabled="true">مشاهده آنلاین ↗</a>
 </div>
-<div class="note" id="status">برای فعال شدن دریافت عمومی، ابتدا تنظیمات فضای ذخیره‌سازی را طبق README انجام دهید.</div>
-<div class="uploadbox">
-<h3>بارگذاری پاورپوینت</h3>
-<p class="hint">فقط فایل PPTX تا حجم ۳۰ مگابایت پذیرفته می‌شود. پس از بارگذاری، فایل برای همه بازدیدکنندگان قابل دریافت خواهد بود.</p>
-<div class="uploadrow"><input class="filepick" style="flex:1;min-width:180px" id="adminEmail" type="email" placeholder="ایمیل مدیر"><input class="filepick" style="flex:1;min-width:180px" id="adminPassword" type="password" placeholder="رمز عبور"></div>
-<div class="uploadrow"><button class="btn secondary" id="loginBtn" type="button">ورود مدیر</button><button class="btn secondary" id="logoutBtn" type="button" hidden>خروج</button><span class="uploadstatus" id="authStatus">برای بارگذاری، مدیر باید وارد شود.</span></div>
-<input class="filepick" id="pptFile" type="file" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation">
-<div class="uploadrow"><button class="btn primary" id="uploadBtn" type="button">↑ بارگذاری فایل</button><span class="uploadstatus" id="uploadStatus">هنوز فایلی انتخاب نشده است.</span></div>
-<div class="progress" id="progress"><span id="progressBar"></span></div>
-</div>
+<div class="note" id="status">فایل پاورپوینت هنوز به سایت اضافه نشده است. پس از قرار گرفتن فایل در مخزن، لینک دریافت فعال می‌شود.</div>
 </section>
 <aside class="card side">
 <h3>راهنمای دریافت فایل</h3>
@@ -78,40 +63,23 @@ footer{border-top:1px solid #ffffff12;padding:24px 0;color:#8293a8;font-size:12p
 </main>
 <footer><div class="foot"><span>© 2026 HE3AM Studio</span><span>ساخته‌شده برای ارائه کلاسی</span></div></footer>
 </div>
-<script src="config.js"></script>
 <script>
-const bucket='presentations', objectName='presentation.pptx';
-const fileUrl=()=>window.SUPABASE_URL.replace(/\\/$/,'')+'/storage/v1/object/public/'+bucket+'/'+objectName;
-function enableFile(url){const d=document.getElementById('download'),p=document.getElementById('preview');d.href=url;d.download='Ma-Ham-Mitavan.pptx';d.classList.remove('disabled');d.removeAttribute('aria-disabled');p.href='https://view.officeapps.live.com/op/view.aspx?src='+encodeURIComponent(url);p.target='_blank';p.rel='noopener';p.classList.remove('disabled');p.removeAttribute('aria-disabled');document.getElementById('status').textContent='فایل ارائه آماده دریافت است.';}
-if(window.SUPABASE_URL&&window.SUPABASE_ANON_KEY){fetch(fileUrl(),{method:'HEAD'}).then(r=>{if(r.ok)enableFile(fileUrl());});}
-let adminToken=null;
-const authStatus=document.getElementById('authStatus');
-document.getElementById('loginBtn').addEventListener('click',async()=>{
- if(!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY){authStatus.textContent='تنظیمات config.js کامل نیست.';return;}
- const email=document.getElementById('adminEmail').value,password=document.getElementById('adminPassword').value;
- if(!email||!password){authStatus.textContent='ایمیل و رمز عبور را وارد کنید.';return;}
- authStatus.textContent='در حال ورود…';
- try{const r=await fetch(window.SUPABASE_URL.replace(/\\/$/,'')+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:window.SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});const data=await r.json();if(!r.ok)throw new Error(data.msg||data.message||'ورود ناموفق بود.');adminToken=data.access_token;authStatus.textContent='ورود مدیر موفق بود.';document.getElementById('logoutBtn').hidden=false;}catch(e){authStatus.textContent=e.message;}
-});
-document.getElementById('logoutBtn').addEventListener('click',async()=>{if(adminToken){await fetch(window.SUPABASE_URL.replace(/\\/$/,'')+'/auth/v1/logout',{method:'POST',headers:{apikey:window.SUPABASE_ANON_KEY,Authorization:'Bearer '+adminToken}}).catch(()=>{});}adminToken=null;authStatus.textContent='از حساب مدیر خارج شدید.';document.getElementById('logoutBtn').hidden=true;});
-const input=document.getElementById('pptFile'),btn=document.getElementById('uploadBtn'),msg=document.getElementById('uploadStatus'),progress=document.getElementById('progress'),bar=document.getElementById('progressBar');
-input.addEventListener('change',()=>{msg.textContent=input.files[0]?input.files[0].name+' انتخاب شد.':'هنوز فایلی انتخاب نشده است.';});
-btn.addEventListener('click',async()=>{
- const file=input.files[0];
- if(!file){msg.textContent='ابتدا یک فایل پاورپوینت انتخاب کنید.';return;}
- if(!file.name.toLowerCase().endsWith('.pptx')){msg.textContent='فرمت مجاز فقط PPTX است.';return;}
- if(file.size>30*1024*1024){msg.textContent='حجم فایل باید کمتر از ۳۰ مگابایت باشد.';return;}
- if(!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY){msg.textContent='تنظیمات آپلود هنوز انجام نشده؛ راهنمای README را دنبال کنید.';return;}
- if(!adminToken){msg.textContent='ابتدا با حساب مدیر وارد شوید.';return;}
- btn.disabled=true;btn.textContent='در حال بارگذاری…';progress.style.display='block';bar.style.width='15%';
- try{
-  const endpoint=window.SUPABASE_URL.replace(/\\/$/,'')+'/storage/v1/object/'+bucket+'/'+objectName;
-  const response=await fetch(endpoint,{method:'POST',headers:{apikey:window.SUPABASE_ANON_KEY,Authorization:'Bearer '+adminToken,'Content-Type':file.type||'application/vnd.openxmlformats-officedocument.presentationml.presentation','x-upsert':'true'},body:file});
-  bar.style.width='100%';
-  if(!response.ok){const detail=await response.text();throw new Error(detail.includes('Bucket not found')?'فضای ذخیره‌سازی presentations ساخته نشده است.':detail.includes('row-level security')?'مجوز آپلود در Storage تنظیم نشده است.':'آپلود ناموفق بود؛ تنظیمات Storage را بررسی کنید.');}
-  enableFile(fileUrl());msg.textContent='بارگذاری با موفقیت انجام شد!';document.getElementById('status').textContent='فایل جدید با موفقیت بارگذاری شد و آماده دریافت است.';
- }catch(e){msg.textContent=e.message||'خطا در بارگذاری فایل.';}
- finally{btn.disabled=false;btn.textContent='↑ بارگذاری فایل';}
-});
+const filePath='presentation.pptx';
+const fileUrl=new URL(filePath,window.location.href).href;
+fetch(fileUrl,{method:'HEAD'}).then(response=>{
+ if(!response.ok) return;
+ const download=document.getElementById('download');
+ const preview=document.getElementById('preview');
+ download.href=filePath;
+ download.download='Ma-Ham-Mitavan.pptx';
+ download.classList.remove('disabled');
+ download.removeAttribute('aria-disabled');
+ preview.href='https://view.officeapps.live.com/op/view.aspx?src='+encodeURIComponent(fileUrl);
+ preview.target='_blank';
+ preview.rel='noopener';
+ preview.classList.remove('disabled');
+ preview.removeAttribute('aria-disabled');
+ document.getElementById('status').textContent='فایل ارائه آماده دریافت و مشاهده آنلاین است.';
+}).catch(()=>{});
 </script>
 </body></html>
