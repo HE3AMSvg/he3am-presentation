@@ -124,7 +124,7 @@ const uploadButton=document.getElementById('uploadButton');
 let storageClient=null;
 function setUploadStatus(message,isError=false){uploadStatus.textContent=message;uploadStatus.style.color=isError?'#fca5a5':'var(--muted)';}
 function formatSize(bytes){return bytes<1024*1024?(bytes/1024).toFixed(0)+' KB':(bytes/1024/1024).toFixed(1)+' MB';}
-function safeName(name){return name.replace(/[\\/:*?"<>|#%{}~&]/g,'_').replace(/\s+/g,' ').trim().slice(0,100)||'presentation.pptx';}
+function safeName(name){return name.normalize('NFKD').replace(/[^\x00-\x7F]/g,'_').replace(/[\\/:*?"<>|#%{}~&]/g,'_').replace(/\s+/g,'_').replace(/[^A-Za-z0-9._-]/g,'_').replace(/_+/g,'_').replace(/^[_\.]+|[_\.]+$/g,'').slice(0,100)||'presentation.pptx';}
 function getStorageClient(){
   if(storageClient)return storageClient;
   if(!window.supabase){setUploadStatus('کتابخانه اتصال به Supabase بارگذاری نشده؛ ممکن است CDN در اینترنت شما در دسترس نباشد.',true);return null;}
