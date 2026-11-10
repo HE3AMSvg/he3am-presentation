@@ -1,5 +1,6 @@
 // Supabase public project settings.
-// Paste your Project URL and Publishable (or legacy anon) key below.
+// Project URL identified from the new Supabase dashboard.
+// Add the new project's Publishable key (or legacy anon key) below.
 // Never put a service_role or secret key in this file.
-window.SUPABASE_URL = "https://pgkxwowfyeqtfovemldf.supabase.co";
-window.SUPABASE_ANON_KEY = "sb_publishable_qJLhSUISNjmi7zC__sPMMQ_9Bhtc4fk";
+window.SUPABASE_URL = "https://ljckuphrbkqralxaznzx.supabase.co";
+window.SUPABASE_ANON_KEY = "PASTE_NEW_PUBLISHABLE_OR_ANON_KEY_HERE";
