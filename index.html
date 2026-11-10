@@ -88,7 +88,7 @@ footer{border-top:1px solid #ffffff12;padding:23px 0;color:#8293a8;font-size:12p
 
 <footer><div class="foot"><span>© 2026 HE3AM Studio</span><span>ارائه‌دهنده: HE3AM · پایه دهم ریاضی و فیزیک</span></div></footer>
 </div>
-<script src="config.js"></script>
+<script src="config.js?v=20261110-2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const slides = [
@@ -127,9 +127,12 @@ function formatSize(bytes){return bytes<1024*1024?(bytes/1024).toFixed(0)+' KB':
 function safeName(name){return name.replace(/[\\/:*?"<>|#%{}~&]/g,'_').replace(/\s+/g,' ').trim().slice(0,100)||'presentation.pptx';}
 function getStorageClient(){
   if(storageClient)return storageClient;
-  if(!window.supabase||!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY||window.SUPABASE_URL.includes('YOUR_')||window.SUPABASE_ANON_KEY.includes('YOUR_'))return null;
-  storageClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
-  return storageClient;
+  if(!window.supabase){setUploadStatus('کتابخانه اتصال به Supabase بارگذاری نشده؛ ممکن است CDN در اینترنت شما در دسترس نباشد.',true);return null;}
+  if(!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY||window.SUPABASE_URL.includes('YOUR_')||window.SUPABASE_ANON_KEY.includes('YOUR_')){
+    setUploadStatus('فایل config.js هنوز مقادیر واقعی پروژه را دریافت نکرده است. صفحه را با Ctrl+F5 تازه‌سازی کنید.',true);return null;
+  }
+  try{storageClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);return storageClient;}
+  catch(error){setUploadStatus('خطا در ساخت اتصال Supabase: '+error.message,true);return null;}
 }
 async function loadFiles(){
   const client=getStorageClient();
@@ -155,7 +158,7 @@ async function loadFiles(){
 uploadForm.addEventListener('submit',async event=>{
   event.preventDefault();
   const client=getStorageClient();
-  if(!client){setUploadStatus('تنظیمات Supabase هنوز کامل نشده است.',true);return;}
+  if(!client){return;}
   const file=fileInput.files?.[0];
   if(!file){setUploadStatus('ابتدا یک فایل انتخاب کنید.',true);return;}
   if(!file.name.toLowerCase().endsWith('.pptx')){setUploadStatus('فقط فایل‌های PPTX مجاز هستند.',true);return;}
